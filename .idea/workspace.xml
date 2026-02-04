@@ -5,7 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6cdea344-cc2f-4c7f-8c0a-4f01642f77e4" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Snake" beforeDir="false" afterPath="$PROJECT_DIR$/Snake" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Snake/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Snake/LICENSE" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/wait-notify-excercise" beforeDir="false" afterPath="$PROJECT_DIR$/wait-notify-excercise" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/wait-notify-excercise/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/wait-notify-excercise/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/wait-notify-excercise/src/main/java/edu/eci/arsw/primefinder/Control.java" beforeDir="false" afterPath="$PROJECT_DIR$/wait-notify-excercise/src/main/java/edu/eci/arsw/primefinder/Control.java" afterDir="false" />
