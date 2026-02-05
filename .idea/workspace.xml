@@ -5,14 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6cdea344-cc2f-4c7f-8c0a-4f01642f77e4" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/Snake" beforeDir="false" afterPath="$PROJECT_DIR$/Snake" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Snake/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Snake/LICENSE" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/wait-notify-excercise" beforeDir="false" afterPath="$PROJECT_DIR$/wait-notify-excercise" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wait-notify-excercise/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/wait-notify-excercise/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wait-notify-excercise/src/main/java/edu/eci/arsw/primefinder/Control.java" beforeDir="false" afterPath="$PROJECT_DIR$/wait-notify-excercise/src/main/java/edu/eci/arsw/primefinder/Control.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wait-notify-excercise/src/main/java/edu/eci/arsw/primefinder/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/wait-notify-excercise/src/main/java/edu/eci/arsw/primefinder/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/wait-notify-excercise/src/main/java/edu/eci/arsw/primefinder/PrimeFinderThread.java" beforeDir="false" afterPath="$PROJECT_DIR$/wait-notify-excercise/src/main/java/edu/eci/arsw/primefinder/PrimeFinderThread.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -20,7 +14,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/wait-notify-excercise" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="ROOT_SYNC" value="DONT_SYNC" />
   </component>
   <component name="ProjectColorInfo">{
@@ -33,15 +27,29 @@
   </component>
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
+    &quot;Maven. [-q,clean,verify].executor&quot;: &quot;Run&quot;,
     &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;dev&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/CAndr/Downloads/Lab2-ARSW&quot;
   }
 }</component>
+  <component name="RunManager">
+    <configuration default="true" type="JetRunConfigurationType">
+      <module name="Lab2-ARSW" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
+      <module name="Lab2-ARSW" />
+      <option name="filePath" />
+      <method v="2" />
+    </configuration>
+  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="6cdea344-cc2f-4c7f-8c0a-4f01642f77e4" name="Changes" comment="" />

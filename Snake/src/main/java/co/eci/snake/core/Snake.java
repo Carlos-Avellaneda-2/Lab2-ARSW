@@ -2,9 +2,12 @@ package co.eci.snake.core;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public final class Snake {
   private final Deque<Position> body = new ArrayDeque<>();
+  private final ReadWriteLock bodyLock = new ReentrantReadWriteLock();
   private volatile Direction direction;
   private int maxLength = 5;
 
@@ -29,13 +32,41 @@ public final class Snake {
     this.direction = dir;
   }
 
-  public Position head() { return body.peekFirst(); }
+  public Position head() {
+    bodyLock.readLock().lock();
+    try {
+      return body.peekFirst();
+    } finally {
+      bodyLock.readLock().unlock();
+    }
+  }
 
-  public Deque<Position> snapshot() { return new ArrayDeque<>(body); }
+  public Deque<Position> snapshot() {
+    bodyLock.readLock().lock();
+    try {
+      return new ArrayDeque<>(body);
+    } finally {
+      bodyLock.readLock().unlock();
+    }
+  }
 
   public void advance(Position newHead, boolean grow) {
-    body.addFirst(newHead);
-    if (grow) maxLength++;
-    while (body.size() > maxLength) body.removeLast();
+    bodyLock.writeLock().lock();
+    try {
+      body.addFirst(newHead);
+      if (grow) maxLength++;
+      while (body.size() > maxLength) body.removeLast();
+    } finally {
+      bodyLock.writeLock().unlock();
+    }
+  }
+
+  public int length() {
+    bodyLock.readLock().lock();
+    try {
+      return body.size();
+    } finally {
+      bodyLock.readLock().unlock();
+    }
   }
 }

@@ -1,31 +1,41 @@
 package co.eci.snake.concurrency;
 
+import java.util.Objects;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import co.eci.snake.core.Board;
 import co.eci.snake.core.Direction;
 import co.eci.snake.core.Snake;
-
-import java.util.concurrent.ThreadLocalRandom;
 
 public final class SnakeRunner implements Runnable {
   private final Snake snake;
   private final Board board;
   private final int baseSleepMs = 80;
   private final int turboSleepMs = 40;
+  private final GamePauseController pauseController;
+  private final SnakeLifecycleListener lifecycleListener;
+  private final AtomicBoolean alive = new AtomicBoolean(true);
   private int turboTicks = 0;
 
-  public SnakeRunner(Snake snake, Board board) {
-    this.snake = snake;
-    this.board = board;
+  public SnakeRunner(Snake snake, Board board, GamePauseController pauseController, SnakeLifecycleListener lifecycleListener) {
+    this.snake = Objects.requireNonNull(snake, "snake");
+    this.board = Objects.requireNonNull(board, "board");
+    this.pauseController = Objects.requireNonNull(pauseController, "pauseController");
+    this.lifecycleListener = lifecycleListener;
   }
 
   @Override
   public void run() {
+    pauseController.registerRunner();
     try {
-      while (!Thread.currentThread().isInterrupted()) {
+      while (!Thread.currentThread().isInterrupted() && alive.get()) {
+        pauseController.awaitIfPaused();
         maybeTurn();
         var res = board.step(snake);
         if (res == Board.MoveResult.HIT_OBSTACLE) {
-          randomTurn();
+          handleDeath();
+          break;
         } else if (res == Board.MoveResult.ATE_TURBO) {
           turboTicks = 100;
         }
@@ -35,6 +45,14 @@ public final class SnakeRunner implements Runnable {
       }
     } catch (InterruptedException ie) {
       Thread.currentThread().interrupt();
+    } finally {
+      pauseController.deregisterRunner();
+    }
+  }
+
+  private void handleDeath() {
+    if (alive.compareAndSet(true, false) && lifecycleListener != null) {
+      lifecycleListener.onDeath(snake);
     }
   }
 

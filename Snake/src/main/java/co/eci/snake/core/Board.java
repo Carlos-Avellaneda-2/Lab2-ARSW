@@ -36,31 +36,30 @@ public final class Board {
   public synchronized Set<Position> turbo() { return new HashSet<>(turbo); }
   public synchronized Map<Position, Position> teleports() { return new HashMap<>(teleports); }
 
-  public synchronized MoveResult step(Snake snake) {
+  public MoveResult step(Snake snake) {
     Objects.requireNonNull(snake, "snake");
     var head = snake.head();
     var dir = snake.direction();
     Position next = new Position(head.x() + dir.dx, head.y() + dir.dy).wrap(width, height);
 
-    if (obstacles.contains(next)) return MoveResult.HIT_OBSTACLE;
-
     boolean teleported = false;
-    if (teleports.containsKey(next)) {
-      next = teleports.get(next);
-      teleported = true;
+    boolean ateMouse = false;
+    boolean ateTurbo = false;
+    synchronized (this) {
+      if (obstacles.contains(next)) return MoveResult.HIT_OBSTACLE;
+      if (teleports.containsKey(next)) {
+        next = teleports.get(next);
+        teleported = true;
+      }
+      ateMouse = mice.remove(next);
+      ateTurbo = turbo.remove(next);
+      if (ateMouse) {
+        mice.add(randomEmpty());
+        obstacles.add(randomEmpty());
+        if (ThreadLocalRandom.current().nextDouble() < 0.2) turbo.add(randomEmpty());
+      }
     }
-
-    boolean ateMouse = mice.remove(next);
-    boolean ateTurbo = turbo.remove(next);
-
     snake.advance(next, ateMouse);
-
-    if (ateMouse) {
-      mice.add(randomEmpty());
-      obstacles.add(randomEmpty());
-      if (ThreadLocalRandom.current().nextDouble() < 0.2) turbo.add(randomEmpty());
-    }
-
     if (ateTurbo) return MoveResult.ATE_TURBO;
     if (ateMouse) return MoveResult.ATE_MOUSE;
     if (teleported) return MoveResult.TELEPORTED;

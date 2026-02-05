@@ -1,5 +1,33 @@
 package co.eci.snake.ui.legacy;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.event.ActionEvent;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+
+import javax.swing.AbstractAction;
+import javax.swing.ActionMap;
+import javax.swing.InputMap;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.KeyStroke;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+
+import co.eci.snake.concurrency.GamePauseController;
 import co.eci.snake.concurrency.SnakeRunner;
 import co.eci.snake.core.Board;
 import co.eci.snake.core.Direction;
@@ -7,31 +35,36 @@ import co.eci.snake.core.Position;
 import co.eci.snake.core.Snake;
 import co.eci.snake.core.engine.GameClock;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Executors;
-
 public final class SnakeApp extends JFrame {
 
   private final Board board;
   private final GamePanel gamePanel;
   private final JButton actionButton;
   private final GameClock clock;
+  private final GamePauseController pauseController;
+  private final JLabel statsLabel;
   private final java.util.List<Snake> snakes = new java.util.ArrayList<>();
+  private final java.util.List<SnakeStatus> snakeStatuses = new java.util.ArrayList<>();
+  private final Map<Snake, SnakeStatus> statusBySnake = new ConcurrentHashMap<>();
+  private final AtomicLong deathSequence = new AtomicLong();
 
   public SnakeApp() {
     super("The Snake Race");
     this.board = new Board(35, 28);
+    this.pauseController = new GamePauseController();
+    this.statsLabel = new JLabel("Juego en ejecución");
+    statsLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
     int N = Integer.getInteger("snakes", 2);
     for (int i = 0; i < N; i++) {
       int x = 2 + (i * 3) % board.width();
       int y = 2 + (i * 2) % board.height();
       var dir = Direction.values()[i % Direction.values().length];
-      snakes.add(Snake.of(x, y, dir));
+      var snake = Snake.of(x, y, dir);
+      snakes.add(snake);
+      var status = new SnakeStatus(snake, i);
+      snakeStatuses.add(status);
+      statusBySnake.put(snake, status);
     }
 
     this.gamePanel = new GamePanel(board, () -> snakes);
@@ -39,7 +72,10 @@ public final class SnakeApp extends JFrame {
 
     setLayout(new BorderLayout());
     add(gamePanel, BorderLayout.CENTER);
-    add(actionButton, BorderLayout.SOUTH);
+    var controlPanel = new JPanel(new BorderLayout());
+    controlPanel.add(actionButton, BorderLayout.WEST);
+    controlPanel.add(statsLabel, BorderLayout.CENTER);
+    add(controlPanel, BorderLayout.SOUTH);
 
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     pack();
@@ -48,7 +84,7 @@ public final class SnakeApp extends JFrame {
     this.clock = new GameClock(60, () -> SwingUtilities.invokeLater(gamePanel::repaint));
 
     var exec = Executors.newVirtualThreadPerTaskExecutor();
-    snakes.forEach(s -> exec.submit(new SnakeRunner(s, board)));
+    snakes.forEach(s -> exec.submit(new SnakeRunner(s, board, pauseController, this::handleSnakeDeath)));
 
     actionButton.addActionListener((ActionEvent e) -> togglePause());
 
@@ -129,13 +165,83 @@ public final class SnakeApp extends JFrame {
   }
 
   private void togglePause() {
-    if ("Action".equals(actionButton.getText())) {
+    if (!pauseController.isPaused()) {
       actionButton.setText("Resume");
       clock.pause();
+      pauseController.pauseAll();
+      waitForFullPause();
+      gamePanel.repaint();
+      updateStatsLabel();
     } else {
       actionButton.setText("Action");
+      statsLabel.setText("Juego en ejecución");
+      pauseController.resumeAll();
       clock.resume();
     }
+  }
+
+  private void waitForFullPause() {
+    try {
+      pauseController.awaitPauseCompletion();
+    } catch (InterruptedException ie) {
+      Thread.currentThread().interrupt();
+    }
+  }
+
+  private void updateStatsLabel() {
+    var longestAlive = snakeStatuses.stream()
+        .filter(SnakeStatus::isAlive)
+        .max(Comparator.comparingInt(SnakeStatus::length));
+    var firstDead = snakeStatuses.stream()
+        .filter(SnakeStatus::isDead)
+        .min(Comparator.comparingLong(SnakeStatus::deathOrder));
+
+    String aliveText = longestAlive
+        .map(s -> String.format("Viva más larga: #%d (%d)", s.id(), s.length()))
+        .orElse("Viva más larga: N/A");
+    String deadText = firstDead
+        .map(s -> String.format("Primer caída: #%d", s.id()))
+        .orElse("Primer caída: N/A");
+    statsLabel.setText(aliveText + " | " + deadText);
+  }
+
+  private void handleSnakeDeath(Snake snake) {
+    var status = statusBySnake.get(snake);
+    if (status == null) return;
+    long order = deathSequence.incrementAndGet();
+    if (status.markDead(order)) {
+      SwingUtilities.invokeLater(() -> {
+        if (pauseController.isPaused()) {
+          updateStatsLabel();
+        }
+      });
+    }
+  }
+
+  private static final class SnakeStatus {
+    private final Snake snake;
+    private final int id;
+    private final AtomicBoolean alive = new AtomicBoolean(true);
+    private volatile long deathOrder = Long.MAX_VALUE;
+
+    private SnakeStatus(Snake snake, int id) {
+      this.snake = snake;
+      this.id = id;
+    }
+
+    boolean markDead(long order) {
+      if (alive.compareAndSet(true, false)) {
+        deathOrder = order;
+        return true;
+      }
+      return false;
+    }
+
+    boolean isAlive() { return alive.get(); }
+    boolean isDead() { return !alive.get(); }
+    long deathOrder() { return deathOrder; }
+    int length() { return snake.length(); }
+    int id() { return id; }
   }
 
   public static final class GamePanel extends JPanel {
